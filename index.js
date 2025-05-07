@@ -72,22 +72,15 @@ const swaggerOptions = {
         },
       ],
     },
-    apis: ['./index.js'], // Adjust the path to your route files with Swagger comments
+    apis: ['./index.js'], // Adjust the path to your route files
   };
   
   const swaggerDocs = swaggerJsDoc(swaggerOptions);
-  app.use(
-    '/api-docs',
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerDocs, {
-      customCss: `
-        .swagger-ui .topbar { display: none; }
-        .swagger-ui .wrapper { max-width: 1000px; margin: auto; }
-      `,
-      customSiteTitle: "Library Management API Docs",
-    })
-  );
-  
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
+    customJs: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
+    customSiteTitle: "Library Management API Docs"
+  }));
   // Sample route
   app.get('/', (req, res) => {
     res.send('Library Management API is running');
