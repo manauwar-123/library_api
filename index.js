@@ -1,13 +1,41 @@
-require('dotenv').config();
+
+// index.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/Book');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
+require('dotenv').config();
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
+
+// Swagger Configuration
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Library Management API",
+      version: "1.0.0",
+      description: "A simple Library Management API with Swagger UI",
+    },
+    servers: [
+      {
+        url: "https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app/", // Replace with your Vercel URL
+      },
+    ],
+  },
+  apis: ['./index.js'], // Point to your route files (adjust this path)
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+
+
+
 
 // ✅ Debug log
 console.log("🔍 MONGO_URI:", process.env.MONGODB_URI);
@@ -19,6 +47,31 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
 .then(() => console.log('✅ Connected to MongoDB Atlas'))
 .catch(err => console.error('❌ MongoDB Atlas connection error:', err));
+
+/**
+ * @swagger
+ * /books:
+ *   post:
+ *     summary: Add a new book
+ *     tags: [Books]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Book'
+ *     responses:
+ *       201:
+ *         description: Book created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Book'
+ *       400:
+ *         description: Validation error (e.g., missing title or duplicate ISBN)
+ *       500:
+ *         description: Internal server error
+ */
 // aLL Routes
 // POST /books - Add a new book
 app.post('/books', async (req, res) => {
@@ -37,6 +90,48 @@ app.post('/books', async (req, res) => {
   }
 });
 
+
+
+/**
+ * @swagger
+ * /books:
+ *   get:
+ *     summary: Get all books (paginated)
+ *     tags: [Books]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Books per page
+ *     responses:
+ *       200:
+ *         description: Paginated list of books
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 page:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
+ *                 totalBooks:
+ *                   type: integer
+ *                 books:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Book'
+ *       500:
+ *         description: Internal server error
+ */
 // GET (Get all list of book)
 app.get('/books', async (req, res) => {
   try {
@@ -63,6 +158,32 @@ app.get('/books', async (req, res) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /books/{id}:
+ *   get:
+ *     summary: Get a book by ID
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: MongoDB ID of the book
+ *     responses:
+ *       200:
+ *         description: Book found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Book'
+ *       404:
+ *         description: Book not found
+ *       400:
+ *         description: Invalid ID format
+ */
 // GET (Get a specific book)
 app.get('/books/:id', async (req, res) => {
   try {
@@ -80,6 +201,37 @@ app.get('/books/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /books/{id}:
+ *   put:
+ *     summary: Update a book
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: MongoDB ID of the book
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Book'
+ *     responses:
+ *       200:
+ *         description: Updated book
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Book'
+ *       404:
+ *         description: Book not found
+ *       400:
+ *         description: Validation error or duplicate ISBN
+ */
 // PUT method(update book)
 app.put('/books/:id', async (req, res) => {
   try {
@@ -102,6 +254,25 @@ app.put('/books/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /books/{id}:
+ *   delete:
+ *     summary: Delete a book
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: MongoDB ID of the book
+ *     responses:
+ *       200:
+ *         description: Book deleted successfully
+ *       404:
+ *         description: Book not found
+ */
 // DELETE Method(Delete book)
 app.delete('/books/:id', async (req, res) => {
   try {
@@ -115,6 +286,31 @@ app.delete('/books/:id', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /search:
+ *   get:
+ *     summary: Search books by title, author, or genre
+ *     tags: [Books]
+ *     parameters:
+ *       - in: query
+ *         name: query
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Search term
+ *     responses:
+ *       200:
+ *         description: List of matching books
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Book'
+ *       400:
+ *         description: Missing search query
+ */
 // GET (Fuzzy Search for book)
 app.get('/search', async (req, res) => {
   try {
