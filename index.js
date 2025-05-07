@@ -55,36 +55,45 @@ app.use(express.json());
 // Swagger Configuration (Improved)
 // Swagger Configuration (Improved)
 // Serve Swagger UI static files
-const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath();
-app.use('/swagger-ui', express.static(swaggerUiAssetPath));
-
-// Swagger configuration
 const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Library Management API',
-      version: '1.0.0',
-      description: 'A simple API for managing books in a library system',
-    },
-    servers: [
-      {
-        url: 'https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app',
+    definition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'Library Management API',
+        version: '1.0.0',
+        description: 'A simple API for managing books in a library system',
       },
-    ],
-  },
-  apis: ['./index.js'], // Adjust the path to your route files
-};
-
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-
-// Serve Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
-  customCssUrl: '/swagger-ui/swagger-ui.css',
-  customJs: '/swagger-ui/swagger-ui-bundle.js',
-  customSiteTitle: 'Library Management API Documentation',
-}));
-
+      servers: [
+        {
+          url: 'https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app',
+        },
+        {
+          url: 'http://localhost:3000',
+        },
+      ],
+    },
+    apis: ['./index.js'], // Adjust the path to your route files with Swagger comments
+  };
+  
+  const swaggerDocs = swaggerJsDoc(swaggerOptions);
+  app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocs, {
+      customCss: `
+        .swagger-ui .topbar { display: none; }
+        .swagger-ui .wrapper { max-width: 1000px; margin: auto; }
+      `,
+      customSiteTitle: "Library Management API Docs",
+    })
+  );
+  
+  // Sample route
+  app.get('/', (req, res) => {
+    res.send('Library Management API is running');
+  });
+  
+  
   
 
 // ======================
