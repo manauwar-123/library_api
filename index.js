@@ -1,46 +1,103 @@
-
-// index.js
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/Book');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ======================
 // Swagger Configuration
+// ======================
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Book:
+ *       type: object
+ *       required:
+ *         - title
+ *         - author
+ *       properties:
+ *         _id:
+ *           type: string
+ *           description: The auto-generated id of the book
+ *         title:
+ *           type: string
+ *           description: The book title
+ *         author:
+ *           type: string
+ *           description: The book author
+ *         isbn:
+ *           type: string
+ *           description: Unique ISBN number
+ *         genre:
+ *           type: string
+ *           description: Book genre/category
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: The date the book was added
+ *       example:
+ *         _id: 6512d5f3a8e1f2a3b4c5d6e7
+ *         title: The Lord of the Rings
+ *         author: J.R.R. Tolkien
+ *         isbn: "9780544003415"
+ *         genre: Fantasy
+ *         createdAt: "2023-09-26T10:30:00Z"
+ */
+
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
       title: "Library Management API",
       version: "1.0.0",
-      description: "A simple Library Management API with Swagger UI",
+      description: "API for managing books in a library system",
+      contact: {
+        name: "API Support",
+        email: "support@library.com"
+      }
     },
     servers: [
       {
-        url: "https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app/", // Replace with your Vercel URL
+        url: "http://localhost:3000",
+        description: "Local development server"
       },
+      {
+        url: "https://your-app.vercel.app", // Replace with your Vercel URL
+        description: "Production server"
+      }
     ],
   },
-  apis: ['./index.js'], // Point to your route files (adjust this path)
+  apis: ['./index.js'], // Pointing to this file for JSDoc comments
 };
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
+// Serve Swagger UI with custom options
+app.use('/api-docs', 
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customSiteTitle: "Library API Documentation",
+    customCss: `
+      .topbar { display: none }
+      .swagger-ui .info { margin: 20px 0 }
+    `,
+    customfavIcon: '/favicon.ico'
+  })
+);
 
-
-
-
-// ✅ Debug log
+// ======================
+// Database Connection
+// ======================
 console.log("🔍 MONGO_URI:", process.env.MONGODB_URI);
 
-// ✅ Database connection
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -48,11 +105,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('✅ Connected to MongoDB Atlas'))
 .catch(err => console.error('❌ MongoDB Atlas connection error:', err));
 
+// ======================
+// API Routes
+// ======================
+
 /**
  * @swagger
  * /books:
  *   post:
- *     summary: Add a new book
+ *     summary: Add a new book to the library
  *     tags: [Books]
  *     requestBody:
  *       required: true
@@ -62,18 +123,16 @@ mongoose.connect(process.env.MONGODB_URI, {
  *             $ref: '#/components/schemas/Book'
  *     responses:
  *       201:
- *         description: Book created successfully
+ *         description: The book was successfully created
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Book'
  *       400:
- *         description: Validation error (e.g., missing title or duplicate ISBN)
+ *         description: Validation error or missing required fields
  *       500:
  *         description: Internal server error
  */
-// aLL Routes
-// POST /books - Add a new book
 app.post('/books', async (req, res) => {
   try {
     const book = new Book(req.body);
@@ -90,13 +149,11 @@ app.post('/books', async (req, res) => {
   }
 });
 
-
-
 /**
  * @swagger
  * /books:
  *   get:
- *     summary: Get all books (paginated)
+ *     summary: Get a list of all books with pagination
  *     tags: [Books]
  *     parameters:
  *       - in: query
@@ -104,16 +161,16 @@ app.post('/books', async (req, res) => {
  *         schema:
  *           type: integer
  *           default: 1
- *         description: Page number
+ *         description: The page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
- *         description: Books per page
+ *         description: Number of items per page
  *     responses:
  *       200:
- *         description: Paginated list of books
+ *         description: A paginated list of books
  *         content:
  *           application/json:
  *             schema:
@@ -132,7 +189,6 @@ app.post('/books', async (req, res) => {
  *       500:
  *         description: Internal server error
  */
-// GET (Get all list of book)
 app.get('/books', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -158,12 +214,11 @@ app.get('/books', async (req, res) => {
   }
 });
 
-
 /**
  * @swagger
  * /books/{id}:
  *   get:
- *     summary: Get a book by ID
+ *     summary: Get a single book by ID
  *     tags: [Books]
  *     parameters:
  *       - in: path
@@ -171,10 +226,10 @@ app.get('/books', async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: MongoDB ID of the book
+ *         description: MongoDB ID of the book to get
  *     responses:
  *       200:
- *         description: Book found
+ *         description: Book data
  *         content:
  *           application/json:
  *             schema:
@@ -184,7 +239,6 @@ app.get('/books', async (req, res) => {
  *       400:
  *         description: Invalid ID format
  */
-// GET (Get a specific book)
 app.get('/books/:id', async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -205,7 +259,7 @@ app.get('/books/:id', async (req, res) => {
  * @swagger
  * /books/{id}:
  *   put:
- *     summary: Update a book
+ *     summary: Update a book's information
  *     tags: [Books]
  *     parameters:
  *       - in: path
@@ -213,7 +267,7 @@ app.get('/books/:id', async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: MongoDB ID of the book
+ *         description: MongoDB ID of the book to update
  *     requestBody:
  *       required: true
  *       content:
@@ -222,7 +276,7 @@ app.get('/books/:id', async (req, res) => {
  *             $ref: '#/components/schemas/Book'
  *     responses:
  *       200:
- *         description: Updated book
+ *         description: The updated book
  *         content:
  *           application/json:
  *             schema:
@@ -230,9 +284,8 @@ app.get('/books/:id', async (req, res) => {
  *       404:
  *         description: Book not found
  *       400:
- *         description: Validation error or duplicate ISBN
+ *         description: Invalid input or ISBN conflict
  */
-// PUT method(update book)
 app.put('/books/:id', async (req, res) => {
   try {
     const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
@@ -258,7 +311,7 @@ app.put('/books/:id', async (req, res) => {
  * @swagger
  * /books/{id}:
  *   delete:
- *     summary: Delete a book
+ *     summary: Delete a book from the library
  *     tags: [Books]
  *     parameters:
  *       - in: path
@@ -266,14 +319,13 @@ app.put('/books/:id', async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: MongoDB ID of the book
+ *         description: MongoDB ID of the book to delete
  *     responses:
  *       200:
  *         description: Book deleted successfully
  *       404:
  *         description: Book not found
  */
-// DELETE Method(Delete book)
 app.delete('/books/:id', async (req, res) => {
   try {
     const book = await Book.findByIdAndDelete(req.params.id);
@@ -298,7 +350,7 @@ app.delete('/books/:id', async (req, res) => {
  *         schema:
  *           type: string
  *         required: true
- *         description: Search term
+ *         description: Search term to match against title, author, or genre
  *     responses:
  *       200:
  *         description: List of matching books
@@ -311,7 +363,6 @@ app.delete('/books/:id', async (req, res) => {
  *       400:
  *         description: Missing search query
  */
-// GET (Fuzzy Search for book)
 app.get('/search', async (req, res) => {
   try {
     const { query } = req.query;
@@ -319,7 +370,6 @@ app.get('/search', async (req, res) => {
       return res.status(400).send({ error: 'Search query is required' });
     }
 
-    // Case-insensitive regex search for fuzzy matching
     const regex = new RegExp(query, 'i');
     const books = await Book.find({
       $or: [
@@ -335,22 +385,28 @@ app.get('/search', async (req, res) => {
   }
 });
 
-
+// ======================
+// Basic Routes
+// ======================
 app.get('/', (req, res) => {
   res.send('Library Management API is running');
 });
 
-
+// ======================
+// Error Handling
+// ======================
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send({ error: 'Something went wrong!' });
+  res.status(500).send({ error: 'Internal Server Error' });
 });
 
-
+// ======================
+// Server Startup
+// ======================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
 });
-
 
 module.exports = app;
