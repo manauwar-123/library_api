@@ -3,8 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/Book');
-const swaggerUi = require('swagger-ui-express');
 const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 app.use(cors());
@@ -51,47 +51,27 @@ app.use(express.json());
  *         createdAt: "2023-09-26T10:30:00Z"
  */
 
+// Swagger Configuration (if you are not using a separate config file)
 const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Library Management API",
-      version: "1.0.0",
-      description: "API for managing books in a library system",
-      contact: {
-        name: "API Support",
-        email: "support@library.com"
-      }
-    },
-    servers: [
-      {
-        url: "http://localhost:3000",
-        description: "Local development server"
+    definition: {
+      openapi: "3.0.0",
+      info: {
+        title: "Library Management API",
+        version: "1.0.0",
+        description: "A simple Library Management API with Swagger UI",
       },
-      {
-        url: "https://https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app", 
-        description: "Production server"
-      }
-    ],
-  },
-  apis: ['./index.js'], // Pointing to this file for JSDoc comments
-};
-
-const swaggerSpec = swaggerJsDoc(swaggerOptions);
-
-// Serve Swagger UI with custom options
-app.use('/api-docs', 
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    customSiteTitle: "Library API Documentation",
-    customCss: `
-      .topbar { display: none }
-      .swagger-ui .info { margin: 20px 0 }
-    `,
-    customfavIcon: '/favicon.ico'
-  })
-);
+      servers: [
+        {
+          url: "https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app/", // Replace with your Vercel URL
+        },
+      ],
+    },
+    apis: ['./index.js'], // Adjust this path if your routes are in another folder
+  };
+  
+  const swaggerDocs = swaggerJsDoc(swaggerOptions);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+  
 
 // ======================
 // Database Connection
