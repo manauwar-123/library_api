@@ -69,7 +69,7 @@ const swaggerOptions = {
         description: "Local development server"
       },
       {
-        url: "https://your-app.vercel.app", // Replace with your Vercel URL
+        url: "https://https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app", 
         description: "Production server"
       }
     ],
