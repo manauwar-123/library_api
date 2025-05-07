@@ -80,18 +80,50 @@ const swaggerOptions = {
 const swaggerSpec = swaggerJsDoc(swaggerOptions);
 
 // Serve Swagger UI with custom options
-app.use('/api-docs', 
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    explorer: true,
-    customSiteTitle: "Library API Documentation",
-    customCss: `
+const path = require('path'); // Add this at the top with other requires
+
+// ... (keep your existing swaggerOptions and swaggerSpec code)
+
+// Serve Swagger UI files from node_modules
+const swaggerUiAssetPath = path.join(require.resolve('swagger-ui-dist'), '..');
+app.use('/api-docs', express.static(swaggerUiAssetPath));
+
+// Custom Swagger UI route
+app.get('/api-docs', (req, res) => {
+  const html = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Library API Docs</title>
+    <link rel="stylesheet" href="/api-docs/swagger-ui.css">
+    <style>
       .topbar { display: none }
       .swagger-ui .info { margin: 20px 0 }
-    `,
-    customfavIcon: '/favicon.ico'
-  })
-);
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="/api-docs/swagger-ui-bundle.js"></script>
+    <script src="/api-docs/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = function() {
+        const spec = ${JSON.stringify(swaggerSpec)};
+        SwaggerUIBundle({
+          spec: spec,
+          dom_id: '#swagger-ui',
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+          ],
+          layout: "StandaloneLayout"
+        });
+      };
+    </script>
+  </body>
+  </html>
+  `;
+  res.send(html);
+});
 
 // ======================
 // Database Connection

@@ -16,7 +16,7 @@
     "mongodb": "^6.16.0",
     "mongoose": "^8.14.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^4.6.3"
   },
   "devDependencies": {
     "vercel": "^41.7.0"
