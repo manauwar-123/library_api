@@ -3,7 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const Book = require('./models/Book');
-
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsDoc = require('swagger-jsdoc');
 
 const app = express();
 app.use(cors());
@@ -53,47 +54,36 @@ app.use(express.json());
 // Swagger Configuration (if you are not using a separate config file)
 // Swagger Configuration (Improved)
 // Swagger Configuration (Improved)
-const swaggerJsDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+// Serve Swagger UI static files
+const swaggerUiAssetPath = require('swagger-ui-dist').getAbsoluteFSPath();
+app.use('/swagger-ui', express.static(swaggerUiAssetPath));
 
-// Define Swagger options
+// Swagger configuration
 const swaggerOptions = {
   definition: {
-    openapi: "3.0.0",
+    openapi: '3.0.0',
     info: {
-      title: "Library Management API",
-      version: "1.0.0",
-      description: "A simple API for managing books in a library system",
-      contact: {
-        name: "API Support",
-        email: "support@yourdomain.com",
-      },
+      title: 'Library Management API',
+      version: '1.0.0',
+      description: 'A simple API for managing books in a library system',
     },
     servers: [
       {
-        url: "https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app/", // Replace with your Vercel URL
-        description: "Deployed API on Vercel",
+        url: 'https://library-api-git-main-manauwarnrgn-gmailcoms-projects.vercel.app',
       },
     ],
   },
-  apis: ['./index.js'], // Adjust this path if your routes are in another file
+  apis: ['./index.js'], // Adjust the path to your route files
 };
 
-// Initialize Swagger docs using the options
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 
-// Use Swagger UI
-app.use(
-  '/api-docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocs, {
-    customCssUrl:
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css',
-    customJs:
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js',
-    customSiteTitle: "Library Management API Documentation",
-  })
-);
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs, {
+  customCssUrl: '/swagger-ui/swagger-ui.css',
+  customJs: '/swagger-ui/swagger-ui-bundle.js',
+  customSiteTitle: 'Library Management API Documentation',
+}));
 
   
 
